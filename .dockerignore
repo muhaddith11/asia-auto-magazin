@@ -1,0 +1,9 @@
+node_modules
+.next
+.git
+.env
+.env.*
+build_output.txt
+build_output_2.txt
+Dockerfile
+README.md

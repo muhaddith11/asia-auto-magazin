@@ -1,9 +1,13 @@
 import { PrismaClient } from '@prisma/client'
 
 const prismaClientSingleton = () => {
-  console.log('Prisma client initializing...')
   return new PrismaClient({
-    log: ['error', 'warn'],
+    datasources: {
+      db: {
+        url: process.env.DATABASE_URL || 'postgresql://dummy:dummy@localhost:5432/dummy'
+      }
+    },
+    log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error']
   })
 }
 
