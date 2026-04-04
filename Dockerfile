@@ -22,5 +22,5 @@ COPY --from=builder /app/prisma ./prisma
 
 EXPOSE 3000
 
-# Fixed command without --skip-generate
-CMD ["sh", "-c", "npx prisma db push --accept-data-loss && npm start"]
+# Explicitly passing the DATABASE_URL environment variable to the Prisma CLI
+CMD ["sh", "-c", "npx prisma db push --url $DATABASE_URL --accept-data-loss && npm start"]
