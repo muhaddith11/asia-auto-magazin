@@ -4,9 +4,9 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install
 COPY . .
-# Forcing Prisma to use the library engine more explicitly if needed
 RUN npx prisma generate
-RUN npm run build
+# Provide a dummy DATABASE_URL during build to bypass Next.js build-time connectivity check
+RUN DATABASE_URL=postgresql://dummy:dummy@localhost:5432/dummy npm run build
 
 # Production stage
 FROM node:20-alpine AS runner
