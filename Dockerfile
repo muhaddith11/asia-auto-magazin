@@ -1,15 +1,18 @@
 # Build stage
 FROM node:20-alpine AS builder
+# Install openssl for Prisma binary engine support
+RUN apk add --no-cache openssl
 WORKDIR /app
 COPY package*.json ./
 RUN npm install
 COPY . .
 RUN npx prisma generate
-# Provide a dummy DATABASE_URL during build to bypass Next.js build-time connectivity check
 RUN DATABASE_URL=postgresql://dummy:dummy@localhost:5432/dummy npm run build
 
 # Production stage
 FROM node:20-alpine AS runner
+# Install openssl for Prisma binary engine support
+RUN apk add --no-cache openssl
 WORKDIR /app
 ENV NODE_ENV=production
 COPY --from=builder /app/next.config.ts ./
