@@ -1,21 +1,18 @@
 # Build stage
-FROM node:20-slim AS builder
-# Install necessary tools for Debian
-RUN apt-get update && apt-get install -y openssl ca-certificates && rm -rf /var/lib/apt/lists/*
+FROM node:20 AS builder
 WORKDIR /app
 COPY package*.json ./
+# Forcing install even with dependency conflicts (due to React 19 / Next 15 peer issues)
 RUN npm install
 COPY . .
-# Set environment variables for Prisma binary engine
+# Force binary engine for both build and runtime
 ENV PRISMA_CLIENT_ENGINE_TYPE=binary
 RUN npx prisma generate
-# Provide a dummy DATABASE_URL during build
+# Provide dummy DATABASE_URL during build
 RUN DATABASE_URL=postgresql://dummy:dummy@localhost:5432/dummy npm run build
 
 # Production stage
-FROM node:20-slim AS runner
-# Install openssl for runtime
-RUN apt-get update && apt-get install -y openssl ca-certificates && rm -rf /var/lib/apt/lists/*
+FROM node:20 AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 ENV PRISMA_CLIENT_ENGINE_TYPE=binary
