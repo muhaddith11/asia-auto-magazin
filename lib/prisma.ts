@@ -8,7 +8,7 @@ const prismaClientSingleton = () => {
       }
     },
     log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error']
-  })
+  } as any)
 }
 
 const globalForPrisma = globalThis as unknown as {
