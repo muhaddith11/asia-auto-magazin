@@ -22,5 +22,5 @@ COPY --from=builder /app/prisma ./prisma
 
 EXPOSE 3000
 
-# Using sh -c to ensure environment variables like DATABASE_URL are properly loaded
-CMD ["sh", "-c", "npx prisma db push --skip-generate && npm start"]
+# Fixed command without --skip-generate
+CMD ["sh", "-c", "npx prisma db push --accept-data-loss && npm start"]
