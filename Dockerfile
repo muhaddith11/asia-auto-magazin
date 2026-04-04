@@ -21,5 +21,6 @@ COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/prisma ./prisma
 
 EXPOSE 3000
-# Automatic database sync before starting the app
-CMD npx prisma db push && npm start
+
+# Using sh -c to ensure environment variables like DATABASE_URL are properly loaded
+CMD ["sh", "-c", "npx prisma db push --skip-generate && npm start"]
