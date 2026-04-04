@@ -1,21 +1,21 @@
 # Build stage
-FROM node:20-alpine AS builder
-# Install openssl for Prisma binary engine support
-RUN apk add --no-cache openssl
+FROM node:20-slim AS builder
+# Install necessary tools for Debian
+RUN apt-get update && apt-get install -y openssl ca-certificates && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 COPY package*.json ./
 RUN npm install
 COPY . .
-# Set PRISMA_CLIENT_ENGINE_TYPE environment variable to force binary engine during build
+# Set environment variables for Prisma binary engine
 ENV PRISMA_CLIENT_ENGINE_TYPE=binary
 RUN npx prisma generate
-# Provide a dummy DATABASE_URL during build to bypass Next.js build-time connectivity check
+# Provide a dummy DATABASE_URL during build
 RUN DATABASE_URL=postgresql://dummy:dummy@localhost:5432/dummy npm run build
 
 # Production stage
-FROM node:20-alpine AS runner
-# Install openssl for Prisma binary engine support
-RUN apk add --no-cache openssl
+FROM node:20-slim AS runner
+# Install openssl for runtime
+RUN apt-get update && apt-get install -y openssl ca-certificates && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 ENV NODE_ENV=production
 ENV PRISMA_CLIENT_ENGINE_TYPE=binary
