@@ -197,10 +197,13 @@ export default function SalesHistoryPage() {
                     )}
                   </div>
                 </TableCell>
-                <TableCell className="py-4 px-6 text-center">
-                  <div className="inline-flex flex-col items-center">
-                    <span className="font-bold text-sm">{sale.items.length} xil</span>
-                    <span className="text-[10px] font-medium text-muted-foreground">({sale.items.reduce((acc: any, i: any) => acc + i.quantity, 0)} dona)</span>
+                <TableCell className="py-4 px-6 max-w-[300px]">
+                  <div className="flex flex-wrap gap-1">
+                    {sale.items.map((item: any) => (
+                      <Badge key={item.id} variant="outline" className="text-[11px] font-bold bg-primary/5 border-primary/10 py-0 h-5">
+                        {item.product?.name || 'Mahsulot'} <span className="ml-1 text-[9px] text-primary opacity-70">x{item.quantity}</span>
+                      </Badge>
+                    ))}
                   </div>
                 </TableCell>
                 <TableCell className="py-4 px-6 text-right">
