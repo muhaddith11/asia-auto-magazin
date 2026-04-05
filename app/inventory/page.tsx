@@ -63,14 +63,19 @@ export default function InventoryPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)
       })
+      
+      const data = await resp.json()
+
       if (resp.ok) {
         toast.success('Mahsulot muvaffaqiyatli qo\'shildi')
         setOpen(false)
         fetchProducts()
         setFormData({ name: '', barcode: '', purchasePrice: '', sellingPrice: '', stockQuantity: '' })
+      } else {
+        toast.error(`Xatolik: ${data.error || 'Server xatosi'}`)
       }
-    } catch (err) {
-      toast.error('Xatolik yuz berdi')
+    } catch (err: any) {
+      toast.error(`Tarmoq xatosi: ${err.message}`)
     }
   }
 
