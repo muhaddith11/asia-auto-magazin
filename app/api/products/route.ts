@@ -24,8 +24,12 @@ export async function GET(request: Request) {
       take: 20
     })
     return NextResponse.json(products)
-  } catch (error) {
-    return NextResponse.json({ error: 'Failed to fetch products' }, { status: 500 })
+  } catch (error: any) {
+    console.error('Products fetch error:', error)
+    return NextResponse.json({ 
+      error: 'Failed to fetch products', 
+      details: error.message 
+    }, { status: 500 })
   }
 }
 
