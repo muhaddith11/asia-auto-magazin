@@ -20,8 +20,19 @@ export default function SalesHistoryPage() {
   const fetchSales = async () => {
     try {
       const resp = await fetch('/api/sales')
+      if (!resp.ok) {
+        throw new Error('API server error')
+      }
       const data = await resp.json()
-      setSales(data)
+      if (Array.isArray(data)) {
+        setSales(data)
+      } else {
+        console.error('Invalid sales data format:', data)
+        setSales([])
+      }
+    } catch (err) {
+      console.error('Failed to fetch sales:', err)
+      setSales([])
     } finally {
       setLoading(false)
     }

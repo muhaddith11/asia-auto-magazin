@@ -27,8 +27,19 @@ export default function CustomersPage() {
   const fetchCustomers = async () => {
     try {
       const resp = await fetch('/api/customers')
+      if (!resp.ok) {
+        throw new Error('API server error')
+      }
       const data = await resp.json()
-      setCustomers(data)
+      if (Array.isArray(data)) {
+        setCustomers(data)
+      } else {
+        console.error('Invalid customers data format:', data)
+        setCustomers([])
+      }
+    } catch (err) {
+      console.error('Failed to fetch customers:', err)
+      setCustomers([])
     } finally {
       setLoading(false)
     }

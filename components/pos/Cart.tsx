@@ -27,7 +27,18 @@ export function Cart() {
   useEffect(() => {
     fetch('/api/customers')
       .then(res => res.json())
-      .then(data => setCustomers(data))
+      .then(data => {
+        if (Array.isArray(data)) {
+          setCustomers(data)
+        } else {
+          console.error('Invalid customers data format:', data)
+          setCustomers([])
+        }
+      })
+      .catch(err => {
+        console.error('Failed to fetch customers:', err)
+        setCustomers([])
+      })
   }, [])
 
   // Auto-focus barcode input
@@ -44,9 +55,9 @@ export function Cart() {
 
     try {
       const resp = await fetch(`/api/products?barcode=${barcode}`)
-      const product: Product = await resp.json()
+      const product = await resp.json()
 
-      if (product) {
+      if (product && !product.error) {
         addToCart(product)
         setBarcode('')
       } else {

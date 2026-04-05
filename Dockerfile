@@ -19,8 +19,11 @@ COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/prisma ./prisma
+COPY --from=builder /app/start.sh ./
+
+RUN chmod +x start.sh
 
 EXPOSE 3000
 
-# Explicitly passing the DATABASE_URL environment variable to the Prisma CLI
-CMD ["sh", "-c", "npx prisma db push --url $DATABASE_URL --accept-data-loss && npm start"]
+# Executing the dedicated startup script
+CMD ["./start.sh"]

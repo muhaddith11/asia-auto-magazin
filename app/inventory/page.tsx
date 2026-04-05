@@ -36,8 +36,20 @@ export default function InventoryPage() {
   const fetchProducts = async () => {
     try {
       const resp = await fetch(`/api/products?q=${debouncedSearch}`)
+      if (!resp.ok) {
+        throw new Error('API server error')
+      }
       const data = await resp.json()
-      setProducts(data)
+      if (Array.isArray(data)) {
+        setProducts(data)
+      } else {
+        console.error('Invalid products data format:', data)
+        setProducts([])
+      }
+    } catch (err) {
+      console.error('Failed to fetch products:', err)
+      toast.error('Mahsulotlarni yuklashda xatolik yuz berdi')
+      setProducts([])
     } finally {
       setLoading(false)
     }
@@ -73,11 +85,11 @@ export default function InventoryPage() {
         </div>
 
         <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger render={
+          <DialogTrigger>
             <Button className="gap-2">
               <Plus className="w-4 h-4" /> Mahsulot qo'shish
             </Button>
-          } />
+          </DialogTrigger>
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
               <DialogTitle>Yangi mahsulot</DialogTitle>
@@ -169,7 +181,7 @@ export default function InventoryPage() {
           </TableHeader>
           <TableBody>
             {loading ? (
-              <TableRow><TableCell colSpan={6} className="text-center py-10">Yuklanmoqda...</TableCell></TableRow>
+              <TableRow><TableCell colSpan={7} className="text-center py-10">Yuklanmoqda...</TableCell></TableRow>
             ) : products.map((product) => (
               <TableRow key={product.id}>
                 <TableCell>
@@ -186,7 +198,7 @@ export default function InventoryPage() {
                 <TableCell className="text-muted-foreground">{formatCurrency(product.purchasePrice)}</TableCell>
                 <TableCell className="font-semibold text-primary">{formatCurrency(product.sellingPrice)}</TableCell>
                 <TableCell className="text-xs text-muted-foreground italic">
-                  {new Date(product.createdAt).toLocaleDateString('uz-UZ', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                  {product.createdAt ? new Date(product.createdAt).toLocaleDateString() : '—'}
                 </TableCell>
                 <TableCell className="text-right">
                   <Button variant="ghost" size="icon">
@@ -196,7 +208,7 @@ export default function InventoryPage() {
               </TableRow>
             ))}
             {!loading && products.length === 0 && (
-              <TableRow><TableCell colSpan={6} className="text-center py-10 text-muted-foreground">Mahsulotlar topilmadi</TableCell></TableRow>
+              <TableRow><TableCell colSpan={7} className="text-center py-10 text-muted-foreground">Mahsulotlar topilmadi</TableCell></TableRow>
             )}
           </TableBody>
         </Table>

@@ -20,7 +20,12 @@ export default function SettingsPage() {
   useEffect(() => {
     fetch('/api/settings')
       .then(res => res.json())
-      .then(data => setStore(data))
+      .then(data => {
+        if (data && !data.error) {
+          setStore(prev => ({ ...prev, ...data }))
+        }
+      })
+      .catch(err => console.error('Failed to fetch settings:', err))
   }, [])
 
   const saveSettings = async () => {
