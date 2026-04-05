@@ -13,6 +13,8 @@ FROM node:20 AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 ENV PRISMA_CLIENT_ENGINE_TYPE=library
+ENV PORT=3001
+
 COPY --from=builder /app/next.config.ts ./
 COPY --from=builder /app/package*.json ./
 COPY --from=builder /app/.next ./.next
@@ -23,7 +25,7 @@ COPY --from=builder /app/start.sh ./
 
 RUN chmod +x start.sh
 
-EXPOSE 3000
+EXPOSE 3001
 
 # Executing the dedicated startup script
 CMD ["./start.sh"]
