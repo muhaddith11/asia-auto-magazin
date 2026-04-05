@@ -6,16 +6,10 @@ const prismaClientSingleton = () => {
   })
 }
 
-const globalForPrisma = globalThis as unknown as {
-  prisma: ReturnType<typeof prismaClientSingleton> | undefined
+declare global {
+  var prisma: undefined | ReturnType<typeof prismaClientSingleton>
 }
 
-// Lazy initialization: Prisma only starts when first accessed
-export const prisma = new Proxy({} as PrismaClient, {
-  get: (target, prop, receiver) => {
-    if (!globalForPrisma.prisma) {
-      globalForPrisma.prisma = prismaClientSingleton()
-    }
-    return Reflect.get(globalForPrisma.prisma, prop, receiver)
-  }
-})
+export const prisma = globalThis.prisma ?? prismaClientSingleton()
+
+if (process.env.NODE_ENV !== 'production') globalThis.prisma = prisma
