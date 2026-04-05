@@ -4,9 +4,9 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install
 COPY . .
-ENV PRISMA_CLIENT_ENGINE_TYPE=binary
+ENV PRISMA_CLIENT_ENGINE_TYPE=library
 RUN npx prisma generate
-RUN DATABASE_URL=postgresql://dummy:dummy@localhost:5432/dummy npm run build
+RUN DATABASE_URL=postgresql://dummy:dummy@localhost:5432/dummy NEXT_TELEMETRY_DISABLED=1 npm run build
 
 # Production stage
 FROM node:20 AS runner
