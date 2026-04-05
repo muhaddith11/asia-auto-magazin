@@ -1,22 +1,14 @@
 import { PrismaClient } from '@prisma/client'
 
 const prismaClientSingleton = () => {
-  let url = process.env.DATABASE_URL
-  
-  // Workaround for problematic prisma+postgres URLs that force "client" engine
-  if (url?.startsWith('prisma+postgres://')) {
-    console.warn('Converting prisma+postgres URL to postgresql for compatibility')
-    url = url.replace('prisma+postgres://', 'postgresql://')
-    // Remove query params that are specific to Prisma Postgres if necessary
-    url = url.split('?')[0] 
+  // Normalize DATABASE_URL if it has the problematic prefix
+  if (process.env.DATABASE_URL?.startsWith('prisma+postgres://')) {
+    console.warn('Normalizing prisma+postgres URL to postgresql...')
+    process.env.DATABASE_URL = process.env.DATABASE_URL.replace('prisma+postgres://', 'postgresql://').split('?')[0]
   }
 
-  console.log('Initializing Prisma Client with engine-type safety...')
   return new PrismaClient({
     log: ['error'],
-    datasources: url ? {
-      db: { url }
-    } : undefined
   })
 }
 
