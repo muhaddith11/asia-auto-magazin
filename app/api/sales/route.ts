@@ -63,7 +63,7 @@ export async function POST(request: Request) {
   }
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     const sales = await prisma.sale.findMany({
       include: {
