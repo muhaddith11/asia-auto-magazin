@@ -1,14 +1,15 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useCallback } from 'react'
 import { Cart } from '@/components/pos/Cart'
 import { ProductList } from '@/components/pos/ProductList'
 import { CartItem, Product } from '@/types'
 
 export default function POSPage() {
   const [cartItems, setCartItems] = useState<CartItem[]>([])
+  const [allProducts, setAllProducts] = useState<Product[]>([])
 
-  const addToCart = (product: Product) => {
+  const addToCart = useCallback((product: Product) => {
     setCartItems(prev => {
       const existing = prev.find(i => i.productId === product.id)
       if (existing) {
@@ -25,7 +26,7 @@ export default function POSPage() {
         quantity: 1 
       }]
     })
-  }
+  }, [])
 
   const updateQuantity = (id: string, delta: number) => {
     setCartItems(prev => prev.map(item => {
@@ -45,33 +46,49 @@ export default function POSPage() {
     setCartItems([])
   }
 
+  const handleProductsLoaded = (products: Product[]) => {
+    setAllProducts(products)
+  }
+
   return (
-    <main className="h-screen flex flex-col p-4 bg-muted/30">
-      <header className="flex justify-between items-center mb-4">
+    <main className="h-screen flex flex-col p-4 bg-muted/40 text-foreground overflow-hidden">
+      <header className="flex justify-between items-center mb-4 px-2">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Magazin Terminal (POS)</h1>
-          <p className="text-sm text-muted-foreground">Tezkor savdo tizimi</p>
+          <h1 className="text-2xl font-black tracking-tighter flex items-center gap-2">
+             <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+                <span className="text-white text-xs font-black">POS</span>
+             </div>
+             MAHSULOTLAR TERMINALI
+          </h1>
+          <p className="text-[10px] uppercase font-bold text-muted-foreground/60 tracking-widest mt-0.5">ASIA AUTO SERVICE & PARTS</p>
         </div>
-        <div className="flex items-center gap-4 bg-card border px-4 py-2 rounded-lg shadow-sm">
-          <span className="text-sm text-muted-foreground font-medium">Sotuvchi:</span>
-          <span className="text-sm font-bold">Administrator</span>
+        <div className="flex items-center gap-6 divide-x border bg-card/50 backdrop-blur-md px-4 py-2 rounded-2xl shadow-sm">
+           <div className="flex items-center gap-3">
+              <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+              <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Sistema: Online</span>
+           </div>
+           <div className="flex items-center gap-2 pl-6">
+              <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Operator:</span>
+              <span className="text-xs font-black text-primary">ADMINISTRATOR</span>
+           </div>
         </div>
       </header>
 
       <div className="flex-1 grid grid-cols-1 lg:grid-cols-5 gap-6 overflow-hidden">
-        {/* Left Side: Product browsing - Grid of products */}
+        {/* Left Side: Product browsing - Optimized for speed */}
         <div className="lg:col-span-3 flex flex-col gap-4 overflow-hidden h-full">
-           <ProductList onAddToCart={addToCart} />
+           <ProductList onAddToCart={addToCart} onProductsLoaded={handleProductsLoaded} />
         </div>
 
-        {/* Right Side: Cart Interface */}
+        {/* Right Side: Cart Interface - Linked to local products for instant barcode scan */}
         <div className="lg:col-span-2 h-full overflow-hidden">
           <Cart 
             items={cartItems} 
+            products={allProducts}
             onUpdateQuantity={updateQuantity} 
             onRemoveItem={removeItem}
             onClearCart={clearCart}
-            onAddToCartFromBarcode={addToCart}
+            onAddToCart={addToCart}
           />
         </div>
       </div>
