@@ -5,15 +5,21 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/componen
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { Badge } from '@/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Trash2, Plus, Minus, Search, ShoppingCart, CreditCard, Banknote, Wallet } from 'lucide-react'
 import { formatCurrency } from '@/lib/format'
 import { CartItem, Product } from '@/types'
 import { toast } from 'sonner'
 
-export function Cart() {
-  const [items, setItems] = useState<CartItem[]>([])
+interface CartProps {
+  items: CartItem[]
+  onUpdateQuantity: (id: string, delta: number) => void
+  onRemoveItem: (id: string) => void
+  onClearCart: () => void
+  onAddToCartFromBarcode: (product: Product) => void
+}
+
+export function Cart({ items, onUpdateQuantity, onRemoveItem, onClearCart, onAddToCartFromBarcode }: CartProps) {
   const [barcode, setBarcode] = useState('')
   const [paymentMethod, setPaymentMethod] = useState<'cash' | 'card' | 'debt'>('cash')
   const [isProcessing, setIsProcessing] = useState(false)
@@ -31,12 +37,10 @@ export function Cart() {
         if (Array.isArray(data)) {
           setCustomers(data)
         } else {
-          console.error('Invalid customers data format:', data)
           setCustomers([])
         }
       })
       .catch(err => {
-        console.error('Failed to fetch customers:', err)
         setCustomers([])
       })
   }, [])
@@ -58,7 +62,7 @@ export function Cart() {
       const product = await resp.json()
 
       if (product && !product.error) {
-        addToCart(product)
+        onAddToCartFromBarcode(product)
         setBarcode('')
       } else {
         toast.error('Mahsulot topilmadi!')
@@ -67,39 +71,6 @@ export function Cart() {
     } catch (err) {
       toast.error('Xatolik yuz berdi')
     }
-  }
-
-  const addToCart = (product: Product) => {
-    setItems(prev => {
-      const existing = prev.find(i => i.productId === product.id)
-      if (existing) {
-        return prev.map(i => 
-          i.productId === product.id 
-            ? { ...i, quantity: i.quantity + 1 } 
-            : i
-        )
-      }
-      return [...prev, { 
-        productId: product.id, 
-        name: product.name, 
-        price: product.sellingPrice, 
-        quantity: 1 
-      }]
-    })
-  }
-
-  const updateQuantity = (id: string, delta: number) => {
-    setItems(prev => prev.map(item => {
-      if (item.productId === id) {
-        const newQty = Math.max(0, item.quantity + delta)
-        return { ...item, quantity: newQty }
-      }
-      return item
-    }).filter(i => i.quantity > 0))
-  }
-
-  const removeItem = (id: string) => {
-    setItems(prev => prev.filter(i => i.productId !== id))
   }
 
   const finalizeSale = async () => {
@@ -121,7 +92,7 @@ export function Cart() {
 
       if (resp.ok) {
         toast.success('Savdo muvaffaqiyatli yakunlandi!')
-        setItems([])
+        onClearCart()
         setCardInfo('')
       } else {
         toast.error('Savdo yakunlanmadi!')
@@ -134,69 +105,78 @@ export function Cart() {
   }
 
   return (
-    <Card className="w-full h-full flex flex-col glassmorphism">
-      <CardHeader className="border-b">
-        <CardTitle className="flex items-center gap-2">
+    <Card className="w-full h-full flex flex-col glassmorphism border-primary/20">
+      <CardHeader className="border-b bg-muted/20 pb-4">
+        <CardTitle className="flex items-center gap-2 text-lg">
           <ShoppingCart className="w-5 h-5 text-primary" />
           Savat
+          {items.length > 0 && (
+            <span className="ml-auto text-xs px-2 py-0.5 bg-primary/10 text-primary rounded-full">
+              {items.length} xil mahsulot
+            </span>
+          )}
         </CardTitle>
       </CardHeader>
       
-      <div className="p-4 border-b">
+      <div className="p-4 border-b bg-muted/10">
         <form onSubmit={handleBarcodeSubmit} className="flex gap-2">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
               ref={barcodeRef}
               placeholder="Barcode skanerlang..."
-              className="pl-10"
+              className="pl-10 h-10 border-primary/20 focus:border-primary transition-all"
               value={barcode}
               onChange={(e) => setBarcode(e.target.value)}
             />
           </div>
-          <Button type="submit">Qidirish</Button>
+          <Button type="submit" variant="secondary" className="h-10">Qidirish</Button>
         </form>
       </div>
 
       <CardContent className="flex-1 overflow-auto p-0">
         <Table>
-          <TableHeader>
+          <TableHeader className="bg-muted/30 sticky top-0 z-10">
             <TableRow>
-              <TableHead>Nomi</TableHead>
+              <TableHead className="w-[180px]">Nomi</TableHead>
               <TableHead className="text-center">Miqdor</TableHead>
               <TableHead className="text-right">Narxi</TableHead>
-              <TableHead></TableHead>
+              <TableHead className="w-[50px]"></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {items.map((item) => (
-              <TableRow key={item.productId}>
-                <TableCell className="font-medium">{item.name}</TableCell>
-                <TableCell>
-                  <div className="flex items-center justify-center gap-2">
-                    <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => updateQuantity(item.productId, -1)}>
+              <TableRow key={item.productId} className="hover:bg-muted/10">
+                <TableCell className="font-semibold text-sm py-3 leading-tight">{item.name}</TableCell>
+                <TableCell className="py-2">
+                  <div className="flex items-center justify-center gap-3 bg-muted/40 rounded-lg p-1 w-fit mx-auto border">
+                    <Button variant="ghost" size="icon" className="h-6 w-6 hover:bg-background" onClick={() => onUpdateQuantity(item.productId, -1)}>
                       <Minus className="h-3 w-3" />
                     </Button>
-                    <span className="w-8 text-center">{item.quantity}</span>
-                    <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => updateQuantity(item.productId, 1)}>
+                    <span className="w-6 text-center font-bold text-sm">{item.quantity}</span>
+                    <Button variant="ghost" size="icon" className="h-6 w-6 hover:bg-background" onClick={() => onUpdateQuantity(item.productId, 1)}>
                       <Plus className="h-3 w-3" />
                     </Button>
                   </div>
                 </TableCell>
-                <TableCell className="text-right font-semibold">
+                <TableCell className="text-right font-bold text-primary py-3">
                   {formatCurrency(item.price * item.quantity)}
                 </TableCell>
-                <TableCell>
-                  <Button variant="ghost" size="icon" onClick={() => removeItem(item.productId)}>
-                    <Trash2 className="h-4 w-4 text-destructive" />
+                <TableCell className="py-3">
+                  <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive transition-colors" onClick={() => onRemoveItem(item.productId)}>
+                    <Trash2 className="h-4 w-4" />
                   </Button>
                 </TableCell>
               </TableRow>
             ))}
             {items.length === 0 && (
               <TableRow>
-                <TableCell colSpan={4} className="h-32 text-center text-muted-foreground">
-                  Savat bo'sh
+                <TableCell colSpan={4} className="h-64 text-center py-8">
+                   <div className="flex flex-col items-center justify-center gap-2 opacity-30">
+                      <ShoppingCart className="w-16 h-16" />
+                      <p className="text-lg font-medium">Savat bo'sh</p>
+                      <p className="text-xs">Sotish uchun mahsulotlarni tanlang</p>
+                   </div>
                 </TableCell>
               </TableRow>
             )}
@@ -204,64 +184,67 @@ export function Cart() {
         </Table>
       </CardContent>
 
-      <CardFooter className="flex-col gap-4 border-t pt-6">
-        <div className="flex w-full justify-between items-center text-xl font-bold">
-          <span>Umumiy:</span>
-          <span className="text-primary">{formatCurrency(total)}</span>
+      <CardFooter className="flex-col gap-5 border-t pt-6 bg-muted/10">
+        <div className="flex w-full justify-between items-center px-2">
+          <span className="text-lg text-muted-foreground font-medium">Umumiy to'lov:</span>
+          <span className="text-2xl font-black text-primary drop-shadow-sm">{formatCurrency(total)}</span>
         </div>
         
         <div className="grid grid-cols-1 gap-4 w-full">
            {paymentMethod === 'debt' && (
-             <Select value={selectedCustomerId || ''} onValueChange={setSelectedCustomerId}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Mijozni tanlang" />
-                </SelectTrigger>
-                <SelectContent>
-                  {customers.map(c => (
-                    <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                  ))}
-                </SelectContent>
-             </Select>
+             <div className="animate-in fade-in slide-in-from-top-1 duration-200">
+               <Select value={selectedCustomerId || ''} onValueChange={setSelectedCustomerId}>
+                  <SelectTrigger className="border-destructive/30">
+                    <SelectValue placeholder="Nasiya uchun mijozni tanlang" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {customers.map(c => (
+                      <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+               </Select>
+             </div>
            )}
 
            {paymentMethod === 'card' && (
              <Input 
-                placeholder="Terminal ID / Chek raqami" 
+                placeholder="Terminal ID / Chek raqami (ixtiyoriy)" 
                 value={cardInfo} 
                 onChange={(e) => setCardInfo(e.target.value)}
+                className="animate-in fade-in slide-in-from-top-1 duration-200"
               />
            )}
 
           <div className="grid grid-cols-2 gap-4">
             <Select value={paymentMethod} onValueChange={(val: any) => setPaymentMethod(val)}>
-              <SelectTrigger>
+              <SelectTrigger className="h-12 border-primary/20 font-medium">
                 <SelectValue placeholder="To'lov turi" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="cash">
                   <div className="flex items-center gap-2">
-                    <Banknote className="w-4 h-4" /> Naqd
+                    <Banknote className="w-4 h-4 text-emerald-500" /> Naqd pul
                   </div>
                 </SelectItem>
                 <SelectItem value="card">
                   <div className="flex items-center gap-2">
-                    <CreditCard className="w-4 h-4" /> Karta
+                    <CreditCard className="w-4 h-4 text-blue-500" /> Plastik karta
                   </div>
                 </SelectItem>
                 <SelectItem value="debt">
                   <div className="flex items-center gap-2 text-destructive">
-                    <Wallet className="w-4 h-4" /> Nasiya
+                    <Wallet className="w-4 h-4" /> Nasiya (Qarz)
                   </div>
                 </SelectItem>
               </SelectContent>
             </Select>
             
             <Button 
-              className="w-full text-lg h-12" 
+              className="w-full text-lg h-12 font-bold shadow-lg shadow-primary/20 transition-all hover:scale-[1.01] active:scale-[0.98]" 
               disabled={items.length === 0 || isProcessing || (paymentMethod === 'debt' && !selectedCustomerId)}
               onClick={finalizeSale}
             >
-              {isProcessing ? 'Yozilmoqda...' : 'To\'lov qilish'}
+              {isProcessing ? 'Yakunlanmoqda...' : 'To\'lov qilish'}
             </Button>
           </div>
         </div>
