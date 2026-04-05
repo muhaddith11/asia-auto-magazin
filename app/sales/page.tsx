@@ -177,19 +177,19 @@ export default function SalesHistoryPage() {
                 </TableCell>
                 <TableCell className="py-4 px-6">
                   <div className="flex flex-col gap-1">
-                    <Badge variant="outline" className={`gap-1.5 w-fit font-bold border-muted-foreground/20 px-2 py-1 ${
-                      sale.paymentMethod === 'cash' ? 'text-emerald-600 bg-emerald-50/50' : 
-                      sale.paymentMethod === 'card' ? 'text-blue-600 bg-blue-50/50' : 
-                      'text-rose-600 bg-rose-50/50'
-                    }`}>
                       {sale.paymentMethod === 'cash' ? (
-                        <><Banknote className="w-3.5 h-3.5" /> Naqd</>
+                        <Badge variant="outline" className="gap-1.5 w-fit font-bold border-emerald-500/20 px-2 py-1 text-emerald-400 bg-emerald-500/10">
+                          <Banknote className="w-3.5 h-3.5" /> Naqd
+                        </Badge>
                       ) : sale.paymentMethod === 'card' ? (
-                        <><CreditCard className="w-3.5 h-3.5" /> Karta</>
+                        <Badge variant="outline" className="gap-1.5 w-fit font-bold border-blue-500/20 px-2 py-1 text-blue-400 bg-blue-500/10">
+                          <CreditCard className="w-3.5 h-3.5" /> Karta
+                        </Badge>
                       ) : (
-                        <><Wallet className="w-3.5 h-3.5" /> Nasiya</>
+                        <Badge variant="outline" className="gap-1.5 w-fit font-bold border-rose-500/20 px-2 py-1 text-rose-400 bg-rose-500/10">
+                          <Wallet className="w-3.5 h-3.5" /> Nasiya
+                        </Badge>
                       )}
-                    </Badge>
                     {sale.cardInfo && (
                       <span className="text-[10px] text-muted-foreground font-mono flex items-center gap-1">
                         <TrendingUp className="w-2.5 h-2.5" /> Terminal ID: {sale.cardInfo}
