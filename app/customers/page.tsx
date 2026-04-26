@@ -64,20 +64,34 @@ export default function CustomersPage() {
     }
   }
 
-  const handlePayment = async (customerId: string) => {
-    if (!confirm('Ushbu mijozning barcha qarzlarini to\'langan deb hisoblaymizmi?')) return
+  const handlePayment = async () => {
+    if (!selectedCustomerId || !paymentAmount) return
     
     try {
-      const resp = await fetch(`/api/customers/${customerId}/pay`, { method: 'POST' })
+      const resp = await fetch(`/api/customers/${selectedCustomerId}/pay`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amount: parseFloat(paymentAmount) })
+      })
+
       if (resp.ok) {
-        toast.success('Qarzlar yopildi')
+        toast.success("To'lov qabul qilindi")
+        setIsPaymentOpen(false)
+        setPaymentAmount('')
         fetchCustomers()
       } else {
-        toast.error('Xatolik yuz berdi')
+        const data = await resp.json()
+        toast.error(data.error || "Xatolik yuz berdi")
       }
     } catch (err) {
-      toast.error('Tarmoq xatosi')
+      toast.error("Tizim xatosi")
     }
+  }
+
+  const handleOpenPayment = (id: string, currentDebt: number) => {
+    setSelectedCustomerId(id)
+    setPaymentAmount(currentDebt.toString())
+    setIsPaymentOpen(true)
   }
 
   const filtered = customers.filter(c => {
@@ -187,15 +201,44 @@ export default function CustomersPage() {
                     <Button variant="ghost" size="sm" className="gap-1">
                       <History className="w-4 h-4" /> Tarix
                     </Button>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="gap-1" 
-                      disabled={totalDebt === 0}
-                      onClick={() => handlePayment(c.id)}
-                    >
-                       To'lov
-                    </Button>
+                    
+                    <Dialog open={isPaymentOpen && selectedCustomerId === c.id} onOpenChange={(val) => {
+                      if (!val) {
+                        setIsPaymentOpen(false)
+                        setSelectedCustomerId(null)
+                      }
+                    }}>
+                      <DialogTrigger asChild>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="gap-1 border-primary/20 hover:bg-primary/5" 
+                          disabled={totalDebt === 0}
+                          onClick={() => handleOpenPayment(c.id, totalDebt)}
+                        >
+                           To'lov
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="sm:max-w-md">
+                         <DialogHeader>
+                            <DialogTitle>Qarzni yopish</DialogTitle>
+                         </DialogHeader>
+                         <div className="py-6 space-y-4">
+                            <div className="space-y-2">
+                               <Label>To'lov summasi (Jami qarz: {formatCurrency(totalDebt)})</Label>
+                               <Input 
+                                 type="number" 
+                                 value={paymentAmount} 
+                                 onChange={e => setPaymentAmount(e.target.value)}
+                                 autoFocus
+                               />
+                            </div>
+                            <Button className="w-full h-12 text-lg" onClick={handlePayment}>
+                               TO'LOVNI TASDIQLASH
+                            </Button>
+                         </div>
+                      </DialogContent>
+                    </Dialog>
                   </TableCell>
                 </TableRow>
               )

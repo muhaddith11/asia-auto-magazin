@@ -4,6 +4,7 @@ import React, { useState, useCallback } from 'react'
 import { Cart } from '@/components/pos/Cart'
 import { ProductList } from '@/components/pos/ProductList'
 import { CartItem, Product } from '@/types'
+import { toast } from 'sonner'
 
 export default function POSPage() {
   const [cartItems, setCartItems] = useState<CartItem[]>([])
@@ -12,6 +13,14 @@ export default function POSPage() {
   const addToCart = useCallback((product: Product) => {
     setCartItems(prev => {
       const existing = prev.find(i => i.productId === product.id)
+      const currentQty = existing ? existing.quantity : 0
+      
+      // Check stock
+      if (currentQty + 1 > product.stockQuantity) {
+        toast.error(`Omborda yetarli mahsulot yo'q! (Mavjud: ${product.stockQuantity})`)
+        return prev
+      }
+
       if (existing) {
         return prev.map(i => 
           i.productId === product.id 
@@ -31,7 +40,14 @@ export default function POSPage() {
   const updateQuantity = (id: string, delta: number) => {
     setCartItems(prev => prev.map(item => {
       if (item.productId === id) {
+        const product = allProducts.find(p => p.id === id)
         const newQty = Math.max(0, item.quantity + delta)
+        
+        if (product && newQty > product.stockQuantity) {
+          toast.error(`Omborda faqat ${product.stockQuantity} dona bor`)
+          return item
+        }
+        
         return { ...item, quantity: newQty }
       }
       return item
