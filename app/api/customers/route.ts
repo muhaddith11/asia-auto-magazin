@@ -9,6 +9,9 @@ export async function GET(request: Request) {
       include: {
         debts: {
           where: { isPaid: false }
+        },
+        _count: {
+          select: { sales: true }
         }
       }
     })

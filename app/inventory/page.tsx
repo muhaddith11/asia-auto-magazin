@@ -22,12 +22,14 @@ export default function InventoryPage() {
   
   // Form state
   const [formData, setFormData] = useState({
+    id: '',
     name: '',
     barcode: '',
     purchasePrice: '',
     sellingPrice: '',
     stockQuantity: ''
   })
+  const [isEditing, setIsEditing] = useState(false)
 
   useEffect(() => {
     fetchProducts()
@@ -58,8 +60,11 @@ export default function InventoryPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     try {
-      const resp = await fetch('/api/products', {
-        method: 'POST',
+      const url = isEditing ? `/api/products/${formData.id}` : '/api/products'
+      const method = isEditing ? 'PATCH' : 'POST'
+      
+      const resp = await fetch(url, {
+        method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)
       })
@@ -67,16 +72,50 @@ export default function InventoryPage() {
       const data = await resp.json()
 
       if (resp.ok) {
-        toast.success('Mahsulot muvaffaqiyatli qo\'shildi')
+        toast.success(isEditing ? 'Mahsulot tahrirlandi' : 'Mahsulot muvaffaqiyatli qo\'shildi')
         setOpen(false)
         fetchProducts()
-        setFormData({ name: '', barcode: '', purchasePrice: '', sellingPrice: '', stockQuantity: '' })
+        resetForm()
       } else {
         toast.error(`Xatolik: ${data.error || 'Server xatosi'}`)
       }
     } catch (err: any) {
       toast.error(`Tarmoq xatosi: ${err.message}`)
     }
+  }
+
+  const handleEdit = (product: Product) => {
+    setFormData({
+      id: product.id,
+      name: product.name,
+      barcode: product.barcode || '',
+      purchasePrice: product.purchasePrice.toString(),
+      sellingPrice: product.sellingPrice.toString(),
+      stockQuantity: product.stockQuantity.toString()
+    })
+    setIsEditing(true)
+    setOpen(true)
+  }
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('Haqiqatdan ham ushbu mahsulotni o\'chirmoqchimisiz?')) return
+    
+    try {
+      const resp = await fetch(`/api/products/${id}`, { method: 'DELETE' })
+      if (resp.ok) {
+        toast.success('Mahsulot o\'chirildi')
+        fetchProducts()
+      } else {
+        toast.error('O\'chirishda xatolik yuz berdi')
+      }
+    } catch (err) {
+      toast.error('Tarmoq xatosi')
+    }
+  }
+
+  const resetForm = () => {
+    setFormData({ id: '', name: '', barcode: '', purchasePrice: '', sellingPrice: '', stockQuantity: '' })
+    setIsEditing(false)
   }
 
   return (
@@ -89,15 +128,15 @@ export default function InventoryPage() {
           <p className="text-muted-foreground">Ombordagi mavjud mahsulotlar boshqaruvi</p>
         </div>
 
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger>
-            <Button className="gap-2">
+        <Dialog open={open} onOpenChange={(v) => { setOpen(v); if(!v) resetForm(); }}>
+          <DialogTrigger asChild>
+            <Button className="gap-2" onClick={() => { setIsEditing(false); resetForm(); }}>
               <Plus className="w-4 h-4" /> Mahsulot qo'shish
             </Button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
-              <DialogTitle>Yangi mahsulot</DialogTitle>
+              <DialogTitle>{isEditing ? 'Mahsulotni tahrirlash' : 'Yangi mahsulot'}</DialogTitle>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4 py-4">
               <div className="space-y-2">
@@ -152,7 +191,7 @@ export default function InventoryPage() {
                 </div>
               </div>
               <DialogFooter>
-                <Button type="submit" className="w-full">Saqlash</Button>
+                <Button type="submit" className="w-full">{isEditing ? 'Saqlash' : 'Qo\'shish'}</Button>
               </DialogFooter>
             </form>
           </DialogContent>
@@ -205,9 +244,12 @@ export default function InventoryPage() {
                 <TableCell className="text-xs text-muted-foreground italic">
                   {product.createdAt ? new Date(product.createdAt).toLocaleDateString() : '—'}
                 </TableCell>
-                <TableCell className="text-right">
-                  <Button variant="ghost" size="icon">
+                <TableCell className="text-right flex justify-end gap-2">
+                  <Button variant="ghost" size="icon" onClick={() => handleEdit(product)}>
                     <Edit2 className="h-4 w-4" />
+                  </Button>
+                  <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => handleDelete(product.id)}>
+                    <Trash2 className="h-4 w-4" />
                   </Button>
                 </TableCell>
               </TableRow>

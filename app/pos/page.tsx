@@ -60,7 +60,7 @@ export default function POSPage() {
              </div>
              MAHSULOTLAR TERMINALI
           </h1>
-          <p className="text-[10px] uppercase font-bold text-muted-foreground/60 tracking-widest mt-0.5">ASIA AUTO SERVICE & PARTS</p>
+          <p className="text-[10px] uppercase font-bold text-muted-foreground/60 tracking-widest mt-0.5">MAGAZIN BOSHQARUV TIZIMI</p>
         </div>
         <div className="flex items-center gap-6 divide-x border bg-card/50 backdrop-blur-md px-4 py-2 rounded-2xl shadow-sm">
            <div className="flex items-center gap-3">

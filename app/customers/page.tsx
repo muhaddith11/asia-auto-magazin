@@ -64,6 +64,22 @@ export default function CustomersPage() {
     }
   }
 
+  const handlePayment = async (customerId: string) => {
+    if (!confirm('Ushbu mijozning barcha qarzlarini to\'langan deb hisoblaymizmi?')) return
+    
+    try {
+      const resp = await fetch(`/api/customers/${customerId}/pay`, { method: 'POST' })
+      if (resp.ok) {
+        toast.success('Qarzlar yopildi')
+        fetchCustomers()
+      } else {
+        toast.error('Xatolik yuz berdi')
+      }
+    } catch (err) {
+      toast.error('Tarmoq xatosi')
+    }
+  }
+
   const filtered = customers.filter(c => {
     const matchesSearch = c.name.toLowerCase().includes(search.toLowerCase())
     const matchesVip = filterVip ? c.isVip : true
@@ -81,11 +97,11 @@ export default function CustomersPage() {
         </div>
 
         <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger render={
+          <DialogTrigger asChild>
             <Button className="gap-2">
               <Plus className="w-4 h-4" /> Mijoz qo'shish
             </Button>
-          } />
+          </DialogTrigger>
           <DialogContent className="sm:max-w-sm">
             <DialogHeader>
               <DialogTitle>Yangi mijoz</DialogTitle>
@@ -171,7 +187,13 @@ export default function CustomersPage() {
                     <Button variant="ghost" size="sm" className="gap-1">
                       <History className="w-4 h-4" /> Tarix
                     </Button>
-                    <Button variant="outline" size="sm" className="gap-1">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="gap-1" 
+                      disabled={totalDebt === 0}
+                      onClick={() => handlePayment(c.id)}
+                    >
                        To'lov
                     </Button>
                   </TableCell>

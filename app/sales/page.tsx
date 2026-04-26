@@ -42,6 +42,16 @@ export default function SalesHistoryPage() {
   const todayCard = todaySales.filter(s => s.paymentMethod === 'card').reduce((acc, s) => acc + s.totalAmount, 0)
   const todayDebt = todaySales.filter(s => s.paymentMethod === 'debt').reduce((acc, s) => acc + s.totalAmount, 0)
   const todayTotal = todayCash + todayCard + todayDebt
+  
+  const calculateProfit = (saleItems: any[]) => {
+    return saleItems.reduce((acc, item) => {
+      const profit = (item.priceAtSale - (item.purchasePriceAtSale || 0)) * item.quantity
+      return acc + profit
+    }, 0)
+  }
+
+  const todayProfit = todaySales.reduce((acc, s) => acc + calculateProfit(s.items), 0)
+  const totalProfit = sales.reduce((acc, s) => acc + calculateProfit(s.items), 0)
 
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-8">
@@ -61,7 +71,7 @@ export default function SalesHistoryPage() {
       </div>
 
       {/* Today's Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         <Card className="glassmorphism border-primary/10 shadow-lg shadow-primary/5 transition-all hover:scale-[1.02]">
           <CardHeader className="pb-2 space-y-1">
             <CardTitle className="text-xs font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-2">
@@ -70,7 +80,7 @@ export default function SalesHistoryPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-black text-primary">
+            <div className="text-2xl font-black text-primary">
                {formatCurrency(todayTotal)}
             </div>
           </CardContent>
@@ -79,12 +89,26 @@ export default function SalesHistoryPage() {
         <Card className="glassmorphism border-emerald-500/10 shadow-lg shadow-emerald-500/5 transition-all hover:scale-[1.02]">
           <CardHeader className="pb-2 space-y-1">
             <CardTitle className="text-xs font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-2">
-               <Banknote className="w-4 h-4 text-emerald-500" />
-               Naqd pul (Kassa)
+               <TrendingUp className="w-4 h-4 text-emerald-500" />
+               Bugungi Foyda
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-black text-emerald-600">
+               {formatCurrency(todayProfit)}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="glassmorphism border-emerald-500/10 shadow-lg shadow-emerald-500/5 transition-all hover:scale-[1.02]">
+          <CardHeader className="pb-2 space-y-1">
+            <CardTitle className="text-xs font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-2">
+               <Banknote className="w-4 h-4 text-emerald-500" />
+               Naqd pul
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-xl font-black text-emerald-600">
                {formatCurrency(todayCash)}
             </div>
           </CardContent>
@@ -94,11 +118,11 @@ export default function SalesHistoryPage() {
           <CardHeader className="pb-2 space-y-1">
             <CardTitle className="text-xs font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-2">
                <CreditCard className="w-4 h-4 text-blue-500" />
-               Karta (Terminal)
+               Karta
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-black text-blue-600">
+            <div className="text-xl font-black text-blue-600">
                {formatCurrency(todayCard)}
             </div>
           </CardContent>
@@ -108,11 +132,11 @@ export default function SalesHistoryPage() {
           <CardHeader className="pb-2 space-y-1">
             <CardTitle className="text-xs font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-2">
                <Wallet className="w-4 h-4 text-rose-500" />
-               Nasiya (Qarz)
+               Nasiya
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-black text-rose-600">
+            <div className="text-xl font-black text-rose-600">
                {formatCurrency(todayDebt)}
             </div>
           </CardContent>
@@ -138,6 +162,16 @@ export default function SalesHistoryPage() {
             <div>
                <p className="text-[10px] font-bold text-muted-foreground uppercase">Jami Tushum</p>
                <p className="text-lg font-black text-primary">{formatCurrency(sales.reduce((acc, sale) => acc + sale.totalAmount, 0))}</p>
+            </div>
+         </div>
+         <div className="w-px h-10 bg-primary/10 hidden sm:block"></div>
+         <div className="flex items-center gap-3">
+            <div className="bg-emerald-500/10 p-2 rounded-full">
+               <TrendingUp className="w-4 h-4 text-emerald-500" />
+            </div>
+            <div>
+               <p className="text-[10px] font-bold text-muted-foreground uppercase">Jami Sof Foyda</p>
+               <p className="text-lg font-black text-emerald-600">{formatCurrency(totalProfit)}</p>
             </div>
          </div>
       </div>

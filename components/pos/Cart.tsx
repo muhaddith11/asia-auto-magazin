@@ -6,9 +6,11 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Trash2, Plus, Minus, Search, ShoppingCart, CreditCard, Banknote, Wallet, ReceiptText, ChevronRight } from 'lucide-react'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
+import { Trash2, Plus, Minus, Search, ShoppingCart, CreditCard, Banknote, Wallet, ReceiptText, ChevronRight, Loader2, Printer, CheckCircle2 } from 'lucide-react'
 import { formatCurrency } from '@/lib/format'
 import { CartItem, Product } from '@/types'
+import { Receipt } from './Receipt'
 import { toast } from 'sonner'
 
 interface CartProps {
@@ -23,12 +25,21 @@ interface CartProps {
 export function Cart({ items, products, onUpdateQuantity, onRemoveItem, onClearCart, onAddToCart }: CartProps) {
   const [barcode, setBarcode] = useState('')
   const [paymentMethod, setPaymentMethod] = useState<'cash' | 'card' | 'debt'>('cash')
-  const [isProcessing, setIsProcessing] = useState(false)
-  const [customers, setCustomers] = useState<any[]>([])
-  const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null)
-  const [cardInfo, setCardInfo] = useState('')
+  const [isSuccessOpen, setIsSuccessOpen] = useState(false)
+  const [lastSaleId, setLastSaleId] = useState('')
+  const [storeSettings, setStoreSettings] = useState<any>(null)
+  const [receiptData, setReceiptData] = useState<any>(null)
   
   const barcodeRef = useRef<HTMLInputElement>(null)
+
+  // Fetch settings for receipt
+  useEffect(() => {
+    fetch('/api/settings')
+      .then(res => res.json())
+      .then(data => {
+        if (!data.error) setStoreSettings(data)
+      })
+  }, [])
 
   // Fetch customers
   useEffect(() => {
@@ -69,31 +80,42 @@ export function Cart({ items, products, onUpdateQuantity, onRemoveItem, onClearC
     if (items.length === 0) return
     setIsProcessing(true)
 
+    const saleData = {
+      items: [...items],
+      paymentMethod,
+      totalAmount: total,
+      customerId: selectedCustomerId,
+      cardInfo: paymentMethod === 'card' ? cardInfo : null
+    }
+
     try {
       const resp = await fetch('/api/sales', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          items,
-          paymentMethod,
-          totalAmount: total,
-          customerId: selectedCustomerId,
-          cardInfo: paymentMethod === 'card' ? cardInfo : null
-        })
+        body: JSON.stringify(saleData)
       })
 
+      const data = await resp.json()
+
       if (resp.ok) {
-        toast.success('Savdo muvaffaqiyatli yakunlandi!')
+        setReceiptData({ ...saleData, saleId: data.id })
+        setLastSaleId(data.id)
+        setIsSuccessOpen(true)
         onClearCart()
         setCardInfo('')
+        setSelectedCustomerId(null)
       } else {
-        toast.error('Savdo yakunlanmadi!')
+        toast.error(`Savdo yakunlanmadi: ${data.error || 'Noma'lum xato'}`)
       }
     } catch (err) {
       toast.error('Tizim xatosi')
     } finally {
       setIsProcessing(false)
     }
+  }
+
+  const handlePrint = () => {
+    window.print()
   }
 
   return (
@@ -254,6 +276,44 @@ export function Cart({ items, products, onUpdateQuantity, onRemoveItem, onClearC
           </Button>
         </div>
       </CardFooter>
+
+      {/* Success & Print Modal */}
+      <Dialog open={isSuccessOpen} onOpenChange={setIsSuccessOpen}>
+        <DialogContent className="sm:max-w-[400px] p-0 overflow-hidden border-none bg-transparent shadow-none">
+          <div className="bg-white rounded-3xl overflow-hidden">
+             <div className="bg-primary p-6 text-white text-center">
+                <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4 animate-bounce">
+                   <CheckCircle2 className="w-10 h-10" />
+                </div>
+                <h3 className="text-xl font-black uppercase tracking-tight">Savdo yakunlandi!</h3>
+                <p className="text-white/70 text-sm font-medium">To'lov muvaffaqiyatli qabul qilindi</p>
+             </div>
+             
+             <div className="p-6 bg-muted/30">
+                <div className="bg-white p-4 rounded-2xl shadow-sm border border-primary/5 max-h-[400px] overflow-auto">
+                   {receiptData && (
+                     <Receipt 
+                        items={receiptData.items}
+                        total={receiptData.totalAmount}
+                        paymentMethod={receiptData.paymentMethod}
+                        saleId={receiptData.saleId}
+                        storeSettings={storeSettings}
+                     />
+                   )}
+                </div>
+             </div>
+
+             <div className="p-6 bg-white flex flex-col gap-3">
+                <Button onClick={handlePrint} className="w-full h-14 rounded-2xl font-black text-lg gap-3 shadow-xl shadow-primary/20 transition-transform active:scale-95">
+                   <Printer className="w-6 h-6" /> CHEK CHIQARISH
+                </Button>
+                <Button variant="ghost" onClick={() => setIsSuccessOpen(false)} className="w-full h-12 rounded-xl font-bold text-muted-foreground">
+                   YOPISH
+                </Button>
+             </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </Card>
   )
 }

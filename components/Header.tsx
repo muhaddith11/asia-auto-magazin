@@ -3,7 +3,7 @@
 import React from 'react'
 import Link from 'next/link'
 import { ModeToggle } from './mode-toggle'
-import { Store, ShoppingCart, Package, Users, History, Home, Settings } from 'lucide-react'
+import { Store, ShoppingCart, Package, Users, History, Home, Settings, FileText } from 'lucide-react'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
 
@@ -15,6 +15,7 @@ export function Header() {
     { name: 'Inventar', href: '/inventory', icon: Package },
     { name: 'Tarix', href: '/sales', icon: History },
     { name: 'Mijozlar', href: '/customers', icon: Users },
+    { name: 'Xarajatlar', href: '/expenses', icon: FileText },
     { name: 'Sozlamalar', href: '/settings', icon: Settings },
   ]
 

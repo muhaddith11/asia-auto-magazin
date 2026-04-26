@@ -23,11 +23,11 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const { name, phone, address, receiptFooter } = body
+    const { name, phone, address, receiptFooter, telegramToken, telegramChatId } = body
     const settings = await prisma.storeSettings.upsert({
       where: { id: 'default' },
-      update: { name, phone, address, receiptFooter },
-      create: { id: 'default', name, phone, address, receiptFooter }
+      update: { name, phone, address, receiptFooter, telegramToken, telegramChatId },
+      create: { id: 'default', name, phone, address, receiptFooter, telegramToken, telegramChatId }
     })
     return NextResponse.json(settings)
   } catch (error) {

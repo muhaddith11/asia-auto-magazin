@@ -5,7 +5,7 @@ import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter }
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
-import { Settings, Store, Users, FileText, Lock, Save } from 'lucide-react'
+import { Settings, Store, Users, FileText, Lock, Save, Send } from 'lucide-react'
 import { toast } from 'sonner'
 
 export default function SettingsPage() {
@@ -14,7 +14,9 @@ export default function SettingsPage() {
     name: '',
     phone: '',
     address: '',
-    receiptFooter: ''
+    receiptFooter: '',
+    telegramToken: '',
+    telegramChatId: ''
   })
 
   useEffect(() => {
@@ -100,6 +102,40 @@ export default function SettingsPage() {
           </CardContent>
           <CardFooter>
             <Button onClick={saveSettings} disabled={loading}>Saqlash</Button>
+          </CardFooter>
+        </Card>
+
+        {/* Telegram Integratsiyasi */}
+        <Card className="border-blue-500/20 shadow-lg shadow-blue-500/5">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-blue-600">
+              <Send className="w-5 h-5" /> Telegram xabarnomalar
+            </CardTitle>
+            <CardDescription>Sotuvlar va hisobotlarni Telegram orqali olish</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label>Bot Token (@BotFather orqali olingan)</Label>
+              <Input 
+                type="password"
+                placeholder="123456789:ABCDefgh..." 
+                value={store.telegramToken || ''} 
+                onChange={e => setStore({...store, telegramToken: e.target.value})} 
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Chat ID (Sizning ID raqamingiz)</Label>
+              <Input 
+                placeholder="12345678" 
+                value={store.telegramChatId || ''} 
+                onChange={e => setStore({...store, telegramChatId: e.target.value})} 
+              />
+            </div>
+          </CardContent>
+          <CardFooter>
+            <Button onClick={saveSettings} disabled={loading} className="bg-blue-600 hover:bg-blue-700">
+              Sozlamalarni saqlash
+            </Button>
           </CardFooter>
         </Card>
 
