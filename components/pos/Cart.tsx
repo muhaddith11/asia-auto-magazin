@@ -105,7 +105,7 @@ export function Cart({ items, products, onUpdateQuantity, onRemoveItem, onClearC
         setCardInfo('')
         setSelectedCustomerId(null)
       } else {
-        toast.error(`Savdo yakunlanmadi: ${data.error || 'Noma'lum xato'}`)
+        toast.error(`Savdo yakunlanmadi: ${data.error || "Noma'lum xato"}`)
       }
     } catch (err) {
       toast.error('Tizim xatosi')
