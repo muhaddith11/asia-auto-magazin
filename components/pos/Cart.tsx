@@ -25,6 +25,7 @@ interface CartProps {
 export function Cart({ items, products, onUpdateQuantity, onRemoveItem, onClearCart, onAddToCart }: CartProps) {
   const [barcode, setBarcode] = useState('')
   const [paymentMethod, setPaymentMethod] = useState<'cash' | 'card' | 'debt'>('cash')
+  const [isProcessing, setIsProcessing] = useState(false)
   const [isSuccessOpen, setIsSuccessOpen] = useState(false)
   const [lastSaleId, setLastSaleId] = useState('')
   const [storeSettings, setStoreSettings] = useState<any>(null)
