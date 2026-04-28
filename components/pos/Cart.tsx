@@ -26,7 +26,6 @@ export function Cart({ items, products, onUpdateQuantity, onRemoveItem, onClearC
   const [barcode, setBarcode] = useState('')
   const [paymentMethod, setPaymentMethod] = useState<'cash' | 'card' | 'debt'>('cash')
   const [isProcessing, setIsProcessing] = useState(false)
-  const [isSuccessOpen, setIsSuccessOpen] = useState(false)
   const [lastSaleId, setLastSaleId] = useState('')
   const [storeSettings, setStoreSettings] = useState<any>(null)
   const [receiptData, setReceiptData] = useState<any>(null)
@@ -104,10 +103,18 @@ export function Cart({ items, products, onUpdateQuantity, onRemoveItem, onClearC
       if (resp.ok) {
         setReceiptData({ ...saleData, saleId: data.id })
         setLastSaleId(data.id)
-        setIsSuccessOpen(true)
-        onClearCart()
-        setCardInfo('')
-        setSelectedCustomerId(null)
+        
+        toast.success("To'lov muvaffaqiyatli qabul qilindi!")
+        
+        // Wait for React to render the hidden receipt, then print
+        setTimeout(() => {
+          window.print()
+          // Clear cart and state after print is triggered
+          onClearCart()
+          setCardInfo('')
+          setSelectedCustomerId(null)
+          setTimeout(() => setReceiptData(null), 1000)
+        }, 100)
       } else {
         toast.error(`Savdo yakunlanmadi: ${data.error || "Noma'lum xato"}`)
       }
@@ -116,10 +123,6 @@ export function Cart({ items, products, onUpdateQuantity, onRemoveItem, onClearC
     } finally {
       setIsProcessing(false)
     }
-  }
-
-  const handlePrint = () => {
-    window.print()
   }
 
   return (
@@ -281,43 +284,18 @@ export function Cart({ items, products, onUpdateQuantity, onRemoveItem, onClearC
         </div>
       </CardFooter>
 
-      {/* Success & Print Modal */}
-      <Dialog open={isSuccessOpen} onOpenChange={setIsSuccessOpen}>
-        <DialogContent className="sm:max-w-[400px] p-0 overflow-hidden border-none bg-transparent shadow-none">
-          <div className="bg-white rounded-3xl overflow-hidden">
-             <div className="bg-primary p-6 text-white text-center">
-                <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4 animate-bounce">
-                   <CheckCircle2 className="w-10 h-10" />
-                </div>
-                <h3 className="text-xl font-black uppercase tracking-tight">Savdo yakunlandi!</h3>
-                <p className="text-white/70 text-sm font-medium">To'lov muvaffaqiyatli qabul qilindi</p>
-             </div>
-             
-             <div className="p-6 bg-muted/30">
-                <div className="bg-white p-4 rounded-2xl shadow-sm border border-primary/5 max-h-[400px] overflow-auto">
-                   {receiptData && (
-                     <Receipt 
-                        items={receiptData.items}
-                        total={receiptData.totalAmount}
-                        paymentMethod={receiptData.paymentMethod}
-                        saleId={receiptData.saleId}
-                        storeSettings={storeSettings}
-                     />
-                   )}
-                </div>
-             </div>
-
-             <div className="p-6 bg-white flex flex-col gap-3">
-                <Button onClick={handlePrint} className="w-full h-14 rounded-2xl font-black text-lg gap-3 shadow-xl shadow-primary/20 transition-transform active:scale-95">
-                   <Printer className="w-6 h-6" /> CHEK CHIQARISH
-                </Button>
-                <Button variant="ghost" onClick={() => setIsSuccessOpen(false)} className="w-full h-12 rounded-xl font-bold text-muted-foreground">
-                   YOPISH
-                </Button>
-             </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+      {/* Hidden Receipt for Auto-Print */}
+      <div className="hidden print:block">
+         {receiptData && (
+           <Receipt 
+              items={receiptData.items}
+              total={receiptData.totalAmount}
+              paymentMethod={receiptData.paymentMethod}
+              saleId={receiptData.saleId}
+              storeSettings={storeSettings}
+           />
+         )}
+      </div>
     </Card>
   )
 }
