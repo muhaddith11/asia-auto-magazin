@@ -19,6 +19,9 @@ export default function CustomersPage() {
   const [name, setName] = useState('')
   const [isVip, setIsVip] = useState(false)
   const [filterVip, setFilterVip] = useState(false)
+  const [isPaymentOpen, setIsPaymentOpen] = useState(false)
+  const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null)
+  const [paymentAmount, setPaymentAmount] = useState('')
 
   useEffect(() => {
     fetchCustomers()

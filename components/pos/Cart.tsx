@@ -30,6 +30,9 @@ export function Cart({ items, products, onUpdateQuantity, onRemoveItem, onClearC
   const [lastSaleId, setLastSaleId] = useState('')
   const [storeSettings, setStoreSettings] = useState<any>(null)
   const [receiptData, setReceiptData] = useState<any>(null)
+  const [customers, setCustomers] = useState<any[]>([])
+  const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null)
+  const [cardInfo, setCardInfo] = useState('')
   
   const barcodeRef = useRef<HTMLInputElement>(null)
 
