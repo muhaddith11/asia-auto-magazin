@@ -25,13 +25,26 @@ export async function GET() {
 
     const todayTotal = todaySales.reduce((acc, s) => acc + s.totalAmount, 0)
     
-    // Calculate profit for today
-    const todayProfit = todaySales.reduce((acc, s) => {
+    // Calculate gross profit for today
+    const todayGrossProfit = todaySales.reduce((acc, s) => {
       const saleProfit = s.items.reduce((iAcc, item) => {
         return iAcc + (item.priceAtSale - (item.purchasePriceAtSale || 0)) * item.quantity
       }, 0)
       return acc + saleProfit
     }, 0)
+
+    // Calculate expenses for today
+    const todayExpenses = await prisma.expense.findMany({
+      where: {
+        createdAt: {
+          gte: start,
+          lte: end
+        }
+      }
+    })
+    const todayExpensesTotal = todayExpenses.reduce((acc, e) => acc + e.amount, 0)
+    
+    const todayProfit = todayGrossProfit - todayExpensesTotal
 
     // 2. Low stock products
     const lowStockCount = await prisma.product.count({

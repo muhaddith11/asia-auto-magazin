@@ -11,29 +11,29 @@ import { uz } from 'date-fns/locale'
 
 export default function SalesHistoryPage() {
   const [sales, setSales] = useState<any[]>([])
+  const [expenses, setExpenses] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetchSales()
+    Promise.all([fetchSales(), fetchExpenses()]).finally(() => setLoading(false))
   }, [])
 
   const fetchSales = async () => {
     try {
       const resp = await fetch('/api/sales')
-      if (!resp.ok) {
-        throw new Error('API server error')
+      if (resp.ok) {
+        setSales(await resp.json())
       }
-      const data = await resp.json()
-      if (Array.isArray(data)) {
-        setSales(data)
-      } else {
-        setSales([])
+    } catch (err) {}
+  }
+
+  const fetchExpenses = async () => {
+    try {
+      const resp = await fetch('/api/expenses')
+      if (resp.ok) {
+        setExpenses(await resp.json())
       }
-    } catch (err) {
-      setSales([])
-    } finally {
-      setLoading(false)
-    }
+    } catch (err) {}
   }
 
   // Stats for today
@@ -50,8 +50,14 @@ export default function SalesHistoryPage() {
     }, 0)
   }
 
-  const todayProfit = todaySales.reduce((acc, s) => acc + calculateProfit(s.items), 0)
-  const totalProfit = sales.reduce((acc, s) => acc + calculateProfit(s.items), 0)
+  const todayGrossProfit = todaySales.reduce((acc, s) => acc + calculateProfit(s.items), 0)
+  const totalGrossProfit = sales.reduce((acc, s) => acc + calculateProfit(s.items), 0)
+
+  const todayExpensesAmount = expenses.filter(e => isToday(new Date(e.createdAt))).reduce((acc, e) => acc + e.amount, 0)
+  const totalExpensesAmount = expenses.reduce((acc, e) => acc + e.amount, 0)
+
+  const todayProfit = todayGrossProfit - todayExpensesAmount
+  const totalProfit = totalGrossProfit - totalExpensesAmount
 
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-8">
